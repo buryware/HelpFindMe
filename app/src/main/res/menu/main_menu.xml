@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/sign_out_menu"
+        android:tooltipText="Sign out, and sign in as another user."
+        android:title="@string/sign_out" />
+    <item
+        android:id="@+id/fresh_config_menu"
+        android:tooltipText="Update the applicacation configuration settings."
+        android:title="@string/fresh_config" />
+    <item
+        android:id="@+id/invite_menu"
+        android:tooltipText="Invite others to join Help Find Save Me!."
+        android:title="@string/invite_menu_label"/>
+    <item
+        android:id="@+id/mute_menu"
+        android:tooltipText="Mute Audio"
+        android:title="@string/mutemenu"/>
+    <item
+        android:id="@+id/camara_front"
+        android:tooltipText="Change the camera view, to the front of your phone."
+        android:title="@string/camera_front"/>
+    <item
+        android:id="@+id/camara_back"
+        android:tooltipText="Change the camera view, to the back of your phone."
+        android:title="@string/camera_back"/>
+    <item
+        android:id="@+id/camara_flashon"
+        android:tooltipText="Turn the camera torch/light ON, of your phone."
+        android:title="@string/camera_flashon"/>
+    <item
+        android:id="@+id/camara_flashoff"
+        android:tooltipText="Turn the camera torch/light OFF, of your phone."
+        android:title="@string/camera_flashoff"/>
+    <item
+        android:id="@+id/useraccount"
+        android:tooltipText="This is your suer account info, like minutes left, etc."
+        android:title="User account info."/>
+    <item
+        android:id="@+id/about"
+        android:tooltipText="Written by Steven Stansbury, at Buryware. Copyright 2020."
+        android:title="@string/about"/>
+
+</menu>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="5dp"
+    tools:context="com.buryware.firebase.geofirebase.MapsActivity">
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:alpha="1.0"
+        android:orientation="vertical">
+
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="426dp"
+            android:layout_above="@+id/map"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1"
+            android:tooltipText="The current location, plus any other \nHelp Find Save Me! sessions active. \ncloser then 1000 ft."
+            ads:cameraZoom="14"
+            tools:context=".MapsActivity"
+            tools:ignore="MissingClass" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/messageRecyclerView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/container"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginBottom="5dp"
+            android:tooltipText="Select which message to respond to here.  \nThis will update the map, \nto selected message.  \n\nRESCUE will use the selected message." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:layout_above="@+id/linearLayout"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="3dp"
+            android:layout_gravity="bottom"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/HelpButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
+                android:layout_weight="0.9"
+                android:background="@drawable/helpcolorbutton"
+                android:tooltipText="This will start a HELP ME! session.\nCan only start one HELP ME! at a time.\nDisabled if a FIND YOU is active."
+                android:text="@string/help"
+                android:textColor="@android:color/white"
+                android:visibility="visible" />
+
+            <Button
+                android:id="@+id/FindYouButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
+                android:layout_weight="0.9"
+                android:background="@drawable/findcolorbutton"
+                android:tooltipText="This will start a FIND You session.\nCan only start one FIND YOU at a time.\nDisabled if a HELP ME! is active."
+                android:text="@string/find"
+                android:textColor="@android:color/white"
+                android:visibility="visible" />
+
+            <Button
+                android:id="@+id/CancelButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
+                android:layout_weight="0.6"
+                android:background="@drawable/resetcolorbutton"
+                android:tooltipText="This will stop a HELP ME!/FIND You session.\nTurns off streaming video and audio."
+                android:text="@string/reset"
+                android:textColor="@android:color/white" />
+
+            <Button
+                android:id="@+id/MuteButton"
+                android:layout_width="5dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
+                android:layout_weight="0.3"
+                android:background="@drawable/resetcolorbutton"
+                android:drawableTop="@mipmap/nonmutedmic"
+                android:textColor="@android:color/white"
+                android:tooltipText="This toggle turns on/off streaming and audio sounds." />
+
+
+            <Button
+                android:id="@+id/ViewSizeButton"
+                android:layout_width="5dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp"
+                android:layout_weight="0.3"
+                android:background="@drawable/resetcolorbutton"
+                android:drawableTop="@mipmap/expand"
+                android:textColor="@android:color/white"
+                android:tooltipText="This will toggle the videio view pane, between full screen/mini screen." />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="390dp"
+        android:layout_height="679dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:background="#000"
+        android:tooltipText="Video and audio streaming is active."
+        android:visibility="invisible"
+        ads:layout_constraintEnd_toEndOf="parent"
+        ads:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="15dp" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@android:style/Widget.DeviceDefault.ProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="168dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center_vertical"
+        android:layout_marginTop="60dp"
+        android:indeterminateDrawable="@drawable/my_progress_indeterminate"
+        android:theme="@style/Progressbar"
+        android:tooltipText="Video and audio streaming is active."
+        android:visibility="invisible"
+        ads:layout_constraintTop_toTopOf="parent" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

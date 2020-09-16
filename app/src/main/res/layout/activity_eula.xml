@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:layout_above="@+id/linearlayout2"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_weight="0.1"
+                android:contentDescription=""
+                android:src="@mipmap/helprescue" />
+
+            <TextView
+                android:layout_width="154dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_weight="0.3"
+                android:text="@string/TERMSandCONDITIONS"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textSize="24sp"
+                tools:ignore="RtlCompat" />
+
+            <Button
+                android:id="@+id/btn_okay"
+                android:layout_width="45dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.3"
+                android:text="@string/Iagree" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linearlayout2"
+            android:layout_width="match_parent"
+            android:layout_height="799dp"
+            android:layout_above="@+id/btn_okay"
+            android:orientation="horizontal">
+
+            <WebView
+                android:id="@+id/webview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="0.4" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

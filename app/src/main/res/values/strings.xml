@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Help Find And Save ME!</string>
+
+    <string name="sign_out">Sign Out</string>
+    <string name="invite_menu_label">Invite</string>
+    <string name="invitation_message">Please join me for Help Find Me!</string>
+    <string name="invitation_cta">Call to action</string>
+    <string name="invitation_title">Help SAVE ME! Invite</string>
+    <string name="sign_in">Sign In</string>
+    <string name="fresh_config">Fresh Config</string>
+
+    <string name="find">FIND YOU</string>
+    <string name="help">HELP ME!</string>
+    <string name="reset">CANCEL</string>
+    <string name="mute">MUTE</string>
+
+    <string name="camera_front">Set the Camera to Front</string>
+    <string name="camera_back">Set the Camera to Back</string>
+    <string name="camera_flashon">Set the Camera Flash On</string>
+    <string name="camera_flashoff">Set the Camera Flash Off</string>
+    <string name="camera_video">Purchase this video</string>
+    <string name="about">About Help SAVE Me!</string>
+
+    <string name="help_msg">Please HELP ME!</string>
+    <string name="find_msg">Assistence is coming...</string>
+
+    <string name="findbtn_msg">This will start a HELP session.  \nCan only start one HELP at a time. \nDisabled if a RESCUE active.</string>
+
+    <string name="about_helpfindme">Help Find Save Me! is a simple Android app, to render assistence, to someone, in trouble.\n\n<b>By Buryware\nAll rights reserved.</b></string>
+    <string name="TimeStampSeed">yyyy.MM.dd.HH.mm.ss</string>
+    <string name="Iagree">I Agree</string>
+    <string name="TERMSandCONDITIONS">Terms and Conditions</string>
+    <string name="mutemenu">Mute Audio</string>
+</resources>
