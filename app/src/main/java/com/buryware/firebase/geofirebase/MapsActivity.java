@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -36,12 +37,14 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -68,6 +71,10 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
 import com.google.android.gms.appinvite.AppInviteInvitation;
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -77,6 +84,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.Dot;
+import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -86,9 +95,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.android.gms.maps.model.PatternItem;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.security.ProviderInstaller;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -111,19 +124,9 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener {
+import static android.webkit.ConsoleMessage.*;
 
-    public static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageTextView;
-        ImageView messageImageView;
-        TextView messengerTextView;
-      //  CircleImageView messengerImageView;
-
-        public MessageViewHolder(View v) {
-            super(v);
-            messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
-        }
-    }
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private List<Marker> LocationMarkers;
@@ -133,7 +136,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationManager mLocationManager;
     private Location mLastKnownLocation;
     private Location mCurrentLocation;
-    private LatLng debugLatLng = null;
     private LocationListener mLocationListener;
 
     // Firebase instance variables
@@ -144,11 +146,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseAnalytics mFirebaseAnalytics;
     private GeoQuery geoQuery;
 
-    private GoogleApiClient mGoogleApiClient;
+    private GoogleSignInClient mSignInClient;
     private static final String MESSAGE_URL = "http://friendlychat.firebase.google.com/message/";
 
     private Button mSendButton;
     private Button mFindButton;
+    private Button mCancelButton;
+    private Button mMuteButton;
     private ProgressBar mProgress;
     private RecyclerView mMessageRecyclerView;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
@@ -164,11 +168,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String mPhoneNumber;
     private Uri mPhotoUrl;
     private String mEmail;
-    private String mMinutes;
+    private String mMinutes = "5000";
     private GeoLocation mCurrentGeoLocation;
+    private LatLng debugLatLng = null;
     private boolean mEmailVerified;
     private boolean bHelpMe = false;
     private boolean bFindMe = false;
+    private boolean bMuted = false;
+    private int mSelectedHelp;
 
     private static final int TWENTY_MINUTES = 1000 * 60 * 20;
     private static final int PERMISSION_REQUEST_CODE = 1;
@@ -196,17 +203,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
 
-        FirebaseCrashlytics.getInstance().setUserId("12345");
-
-        Button crashButton = new Button(this);
-        crashButton.setText("Crash!");
-        crashButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                throw new RuntimeException("Test Crash"); // Force a crash
-            }
-        });
-
-        addContentView(crashButton, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        bFindMe = bHelpMe =  false;
+        mSelectedHelp = -1;
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -273,10 +271,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
-                .addApi(Auth.GOOGLE_SIGN_IN_API)
-                .build();
+        GoogleSignInOptions signinoptions =
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .build();
+        mSignInClient = GoogleSignIn.getClient(this, signinoptions);
 
         // Initialize Firebase Measurement.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
@@ -301,6 +299,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Initialize ProgressBar and RecyclerView.
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
         mLinearLayoutManager = new LinearLayoutManager(this);
         mLinearLayoutManager.setStackFromEnd(true);
@@ -335,10 +334,39 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                             int position,
                                             FriendlyMessage friendlyMessage) {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                if (friendlyMessage.getText() != null) {
-                    viewHolder.messageTextView.setText(friendlyMessage.getText());
+                if (friendlyMessage.getmsgType() != null) {
+                    viewHolder.messageTextView.setText(friendlyMessage.getmsgType());
+
+                    if (friendlyMessage.getmsgType().equals(getResources().getString(R.string.findme_msg))) {
+                        viewHolder.messageTextView.setTextColor(Color.BLUE);
+                        for (int i = position-1; i >=0; i--){
+
+                            FriendlyMessage helpmsg = mFirebaseAdapter.getItem(i);
+                            if (friendlyMessage.gethelpid().equals(helpmsg.getId())) {
+
+                                final int PATTERN_GAP_LENGTH_PX = 20;
+                                final PatternItem DOT = new Dot();
+                                final PatternItem GAP = new Gap(PATTERN_GAP_LENGTH_PX);
+                                final List<PatternItem> PATTERN_POLYLINE_DOTTED = Arrays.asList(GAP, DOT);
+                                Polyline polyline = mMap.addPolyline(new PolylineOptions()
+                                        .add(helpmsg.getLatLng())
+                                        .add(friendlyMessage.getLatLng())
+                                        .pattern(PATTERN_POLYLINE_DOTTED)
+                                        .color(Color.YELLOW)
+                                        .width(5f));
+                                onMapAddHelpGPSSelected(helpmsg.getLatLng());
+                                break;
+                            }
+                        }
+                        onMapAddAssistGPS(friendlyMessage.getLatLng());   // show close by possible finders
+                    }
+                    if (friendlyMessage.getmsgType().equals(getString(R.string.help_msg))) {
+                        viewHolder.messageTextView.setTextColor(Color.RED);
+                        onMapAddHelpGPS(friendlyMessage.getLatLng());
+                        mSelectedHelp = position;
+                    }
                     viewHolder.messageTextView.setVisibility(TextView.VISIBLE);
-                    viewHolder.messageImageView.setVisibility(ImageView.GONE);
+                    viewHolder.messageTextView.setGravity(Gravity.START);
                 }
             }
         };
@@ -348,8 +376,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onItemRangeInserted(int positionStart, int itemCount) {
                 super.onItemRangeInserted(positionStart, itemCount);
                 int friendlyMessageCount = mFirebaseAdapter.getItemCount();
-                int lastVisiblePosition =
-                        mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
                 // If the recycler view is initially being loaded or the
                 // user is at the bottom of the list, scroll to the bottom
                 // of the list to show the newly added message.
@@ -371,10 +398,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mLocationManager = (LocationManager) getApplication().getSystemService(Context.LOCATION_SERVICE);
 
-        DatabaseReference georef = FirebaseDatabase.getInstance().getReference("messages/geofire");
+      /*  DatabaseReference georef = FirebaseDatabase.getInstance().getReference("geofire");
         final GeoFire geoFire = new GeoFire(georef);
 
-        geoFire.setLocation("firebase-hq", new GeoLocation(47.624690, -122.131130));  // todo set to current location
+        //mCurrentGeoLocation.latitude = 47.624690;
+        //mCurrentGeoLocation.longitude = -122.131130;
+       // geoFire.setLocation("firebase-hq", new GeoLocation(47.624690, -122.131130));  // todo set to current location
 
         geoFire.getLocation("firebase-hq", new LocationCallback() {
             @Override
@@ -421,7 +450,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        });*/
 
         // Ensure an updated security provider is installed into the system when a new one is
         // available via Google Play services.
@@ -436,12 +465,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                         @Override
                         public void onProviderInstallFailed(int errorCode, Intent intent) {
-                            //    ConsoleMessage.MessageLevel.LOG(TAG, "New security provider install failed.");
+                            System.out.println("New security provider install failed.");
                             // No notification shown there is no user intervention needed.
                         }
                     });
         } catch (Exception ignorable) {
-            // ConsoleMessage.MessageLevel.LOG(TAG, "Unknown issue trying to install a new security provider.", ignorable);
+            System.out.println("Unknown issue trying to install a new security provider.");
         }
 
         mSendButton = (Button) findViewById(R.id.HelpButton);
@@ -449,10 +478,35 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onClick(View view) {
 
-                String timeStamp = new SimpleDateFormat( getString(R.string.TimeStampSeed)).format(new Date());
-                FriendlyMessage friendlyMessage = new FriendlyMessage(mUid, mUsername, mPassword, mCurrentGeoLocation.toString(), mMinutes, "HELPME", timeStamp);
-                mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
-                mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+                if (bHelpMe) {
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.HelpStarted, Toast.LENGTH_LONG);
+                    toast.show();
+
+                } else if (bFindMe) {
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.FindStarted, Toast.LENGTH_LONG);
+                    toast.show();
+
+                } else {
+                    String lat = "47.624690";  // todo current location
+                    String lng = "-122.131130";
+
+                    //  if (BuildConfig.DEBUG) {
+                    if (debugLatLng != null) {
+                        lat = String.valueOf(debugLatLng.latitude);
+                        lng = String.valueOf(debugLatLng.longitude);
+                    }
+                    // }
+
+                    String timeStamp = new SimpleDateFormat(getString(R.string.TimeStampSeed)).format(new Date());
+                    FriendlyMessage friendlyMessage = new FriendlyMessage("Steve", "1234", "sos@gmail.com", "(424) 679-6456",
+                            getString(R.string.help_msg), "500", lat, lng, timeStamp.toString(), "0");
+                    mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
+                    mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+                    bHelpMe = true;
+                    debugLatLng = null;
+
+                    mProgress.setVisibility(View.VISIBLE);
+                }
             }
         });
 
@@ -460,11 +514,87 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mFindButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (bHelpMe) {
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.HelpStarted, Toast.LENGTH_LONG);
+                    toast.show();
 
-                String timeStamp = new SimpleDateFormat( getString(R.string.TimeStampSeed)).format(new Date());
-                FriendlyMessage friendlyMessage = new FriendlyMessage(mUid, mUsername, mPassword, mCurrentGeoLocation.toString(), mMinutes, "FINDYOU", timeStamp);
-                mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
-                mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+                } else if (bFindMe) {
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.FindStarted, Toast.LENGTH_LONG);
+                    toast.show();
+
+                } else {
+                    String lat = "47.624690";  // todo current location
+                    String lng = "-122.131130";
+
+                    //if (BuildConfig.DEBUG) {
+                    if (debugLatLng != null) {
+                        lat = String.valueOf(debugLatLng.latitude);
+                        lng = String.valueOf(debugLatLng.longitude);
+                    }
+                    //  }
+
+                    FriendlyMessage helpmsg = mFirebaseAdapter.getItem(mSelectedHelp);
+
+                    String timeStamp = new SimpleDateFormat(getString(R.string.TimeStampSeed)).format(new Date());
+                    FriendlyMessage friendlyMessage = new FriendlyMessage("Steve", "1234", "sos@gmail.com", "(424) 679-6456",
+                            getResources().getString(R.string.findme_msg), "500", lat, lng, timeStamp.toString(), helpmsg.getId());
+                    mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
+                    mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+                    bFindMe = true;
+                    debugLatLng = null;
+
+                    mProgress.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+        mCancelButton = (Button) findViewById(R.id.CancelButton);
+        mCancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                /*for (int i = mFirebaseAdapter.getItemCount()-1; i >=0; i--){  // todo delete the items or update
+                    FriendlyMessage findmsg = mFirebaseAdapter.getItem(i);
+                    if (findmsg.getmsgType().equals(getString(R.string.findme_msg))) {
+                        findmsg.sethelpid("null");  // clear the helpid
+                        mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().removeValue();
+                        mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+                    }
+                }
+*/
+                bHelpMe = bFindMe = false;
+                Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.CancelSession , Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
+
+        mMuteButton = (Button) findViewById(R.id.MuteButton);
+        mMuteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Drawable[] drawables = mMuteButton.getCompoundDrawables();
+                Drawable leftCompoundDrawable = drawables[1];
+
+                if (!bMuted) {
+                    bMuted = true;
+
+                    Drawable img = getApplicationContext().getResources().getDrawable(R.mipmap.mutedmic);
+                    img.setBounds(leftCompoundDrawable.getBounds());
+                    mMuteButton.setCompoundDrawables(null, img, null, null);
+
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.MuteSound , Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    bMuted = false;
+
+                    Drawable img = getApplicationContext().getResources().getDrawable(R.mipmap.nonmutedmic);
+                    img.setBounds(leftCompoundDrawable.getBounds());
+                    mMuteButton.setCompoundDrawables(null, img, null, null);
+
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.UnMuteSound , Toast.LENGTH_LONG);
+                    toast.show();
+                }
             }
         });
 
@@ -472,6 +602,34 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+    }
+
+    public class MessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        TextView messageTextView;
+
+        public MessageViewHolder(View v) {
+            super(v);
+            itemView.setOnClickListener(this);
+            messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
+        }
+        @Override
+        public void onClick(View v) {
+            //Toast.makeText(v.getContext(), "position = " + getLayoutPosition(), Toast.LENGTH_SHORT).show();
+            FriendlyMessage msg = mFirebaseAdapter.getItem(getLayoutPosition());
+
+            if (msg.getmsgType().equals(getApplicationContext().getResources().getString(R.string.help_msg))) {
+
+                if (mSelectedHelp != -1) {
+                    FriendlyMessage msg2 = mFirebaseAdapter.getItem(mSelectedHelp);
+                    onMapAddHelpGPS(msg2.getLatLng());
+                }
+                mSelectedHelp = getLayoutPosition();
+                onMapAddHelpGPSSelected(msg.getLatLng());
+            } else {
+                Toast toast = Toast.makeText(getApplication().getBaseContext(), "Only HELP ME entries can be selectted.", Toast.LENGTH_LONG);
+                toast.show();
+            }
+        }
     }
 
     @Override
@@ -499,11 +657,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onDestroy() {
         super.onDestroy();
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
     }
 
     /**
@@ -601,7 +754,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     //    LatLng mLatLng = new LatLng(mCurrentGeoLocation.latitude, mCurrentGeoLocation.longitude);
         LatLng mLatLng = new LatLng(47.624690, -122.131130);
-        mMap.addMarker(new MarkerOptions().position(mLatLng).title("Current location:"));
+
+        if (!bHelpMe && !bFindMe) {
+            mMap.addMarker(new MarkerOptions().position(mLatLng).title("Current location:"));
+        }
 
         final float GEOFENCE_RADIUS = 1000.0f;
         CircleOptions circleOptions = new CircleOptions().center(new LatLng(mLatLng.latitude, mLatLng.longitude))
@@ -624,13 +780,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void onMapAddLocation(LatLng mNewLatLng) {
-        if (BuildConfig.DEBUG) debugLatLng = mNewLatLng;
+       // if (BuildConfig.DEBUG) {
+            debugLatLng = mNewLatLng;
+       // }
     }
 
     public void onMapAddHelpGPSSelected(LatLng mLatLng) {
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(mLatLng);
-        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.helpmapmarkersel));
+        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.helpmapmarkersel2));
 
         LocationMarkers.add(mMap.addMarker(markerOptions));
     }
@@ -643,15 +801,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LocationMarkers.add(mMap.addMarker(markerOptions));
     }
 
-    public void onMapAddassistgpsSelected(LatLng mLatLng) {
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(mLatLng);
-        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.findmapmarkersel));
-
-        LocationMarkers.add(mMap.addMarker(markerOptions));
-    }
-
-    public void onMapAddassistgps(LatLng mLatLng) {
+    public void onMapAddAssistGPS(LatLng mLatLng) {
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(mLatLng);
         markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.findmapmarker));
@@ -710,13 +860,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mFirebaseUser = null;
                 mUsername = ANONYMOUS;
 
-                // Choose authentication providers
+              /*  // Choose authentication providers
                 List<AuthUI.IdpConfig> providers = Arrays.asList(
                         new AuthUI.IdpConfig.EmailBuilder().build(),
                         new AuthUI.IdpConfig.PhoneBuilder().build(),
                         new AuthUI.IdpConfig.GoogleBuilder().build(),
                         new AuthUI.IdpConfig.FacebookBuilder().build(),
-                        new AuthUI.IdpConfig.TwitterBuilder().build());
+                        new AuthUI.IdpConfig.TwitterBuilder().build());*/
+
+                List<AuthUI.IdpConfig> providers = Arrays.asList(
+                        new AuthUI.IdpConfig.EmailBuilder().build(),
+                        new AuthUI.IdpConfig.PhoneBuilder().build(),
+                        new AuthUI.IdpConfig.GoogleBuilder().build());
 
                 // Create and launch sign-in intent
                 startActivityForResult(
@@ -860,6 +1015,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             if (resultCode == RESULT_OK) {
                 // Successfully signed in
+                Task<GoogleSignInAccount> task =
+                        GoogleSignIn.getSignedInAccountFromIntent(data);
+                if (task.isSuccessful()) {
+                    // Sign in succeeded, proceed with account
+                    GoogleSignInAccount acct = task.getResult();
+                } else {
+                    // Sign in failed, handle failure and update UI
+                    // ...
+                }
+
                 FirebaseUser mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
                 mUsername = mFirebaseUser.getDisplayName();
                 mEmail = mFirebaseUser.getEmail();

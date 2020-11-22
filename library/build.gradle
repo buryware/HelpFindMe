@@ -19,6 +19,9 @@ android {
             minifyEnabled false
             proguardFiles 'proguard-rules.pro'
         }
+        debug {
+            debuggable true
+        }
     }
 }
 

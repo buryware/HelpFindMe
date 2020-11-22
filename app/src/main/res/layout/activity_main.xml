@@ -21,32 +21,57 @@
             android:id="@+id/map"
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
-            android:layout_height="426dp"
+            android:layout_height="456dp"
             android:layout_above="@+id/map"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp"
             android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
             android:layout_weight="1"
             android:tooltipText="The current location, plus any other \nHelp Find Save Me! sessions active. \ncloser then 1000 ft."
             ads:cameraZoom="14"
             tools:context=".MapsActivity"
             tools:ignore="MissingClass" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/messageRecyclerView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/container"
-            android:layout_marginLeft="15dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginRight="5dp"
-            android:layout_marginBottom="5dp"
-            android:tooltipText="Select which message to respond to here.  \nThis will update the map, \nto selected message.  \n\nRESCUE will use the selected message." />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_above="@+id/linearLayout"
+            android:orientation="horizontal">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/messageRecyclerView"
+                android:layout_width="136dp"
+                android:layout_height="220dp"
+                android:layout_above="@+id/linearLayout"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginBottom="2dp"
+                android:textSize="18sp"
+                android:tooltipText="Select which message to respond to here.  \nThis will update the map, \nto selected message.  \n\nFindYou will use the selected message." />
+
+                <FrameLayout
+                    android:id="@+id/fragmentContainer"
+                    android:layout_width="120dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="0.1"
+                    android:background="#000"
+                    android:tooltipText="Video and audio streaming is active."
+                    android:visibility="visible"
+                    ads:layout_constraintEnd_toEndOf="parent"
+                    ads:layout_constraintStart_toStartOf="parent"
+                    tools:layout_editor_absoluteY="15dp" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="35dp"
+            android:layout_height="30dp"
             android:layout_above="@+id/linearLayout"
             android:layout_marginTop="3dp"
             android:layout_marginBottom="3dp"
@@ -109,44 +134,15 @@
                 android:tooltipText="This toggle turns on/off streaming and audio sounds." />
 
 
-            <Button
-                android:id="@+id/ViewSizeButton"
-                android:layout_width="5dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp"
-                android:layout_marginTop="2dp"
-                android:layout_marginBottom="2dp"
-                android:layout_weight="0.3"
-                android:background="@drawable/resetcolorbutton"
-                android:drawableTop="@mipmap/expand"
-                android:textColor="@android:color/white"
-                android:tooltipText="This will toggle the videio view pane, between full screen/mini screen." />
-
         </LinearLayout>
 
     </LinearLayout>
-
-    <FrameLayout
-        android:id="@+id/fragmentContainer"
-        android:layout_width="390dp"
-        android:layout_height="679dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="5dp"
-        android:layout_marginEnd="5dp"
-        android:background="#000"
-        android:tooltipText="Video and audio streaming is active."
-        android:visibility="invisible"
-        ads:layout_constraintEnd_toEndOf="parent"
-        ads:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="15dp" />
 
     <ProgressBar
         android:id="@+id/progressBar"
         style="@android:style/Widget.DeviceDefault.ProgressBar"
         android:layout_width="match_parent"
-        android:layout_height="168dp"
+        android:layout_height="91dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_gravity="center_vertical"
