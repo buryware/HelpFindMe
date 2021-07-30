@@ -1,16 +1,16 @@
 <resources>
-    <string name="app_name">Help Find And Save ME!</string>
+    <string name="app_name">Help Find &amp; SAVE ME!</string>
 
     <string name="sign_out">Sign Out</string>
     <string name="invite_menu_label">Invite</string>
-    <string name="invitation_message">Please join me for Help Find Me!</string>
+    <string name="invitation_message">Please join me for Help Find &amp; SAVE ME!</string>
     <string name="invitation_cta">Call to action</string>
     <string name="invitation_title">Help SAVE ME! Invite</string>
     <string name="sign_in">Sign In</string>
     <string name="fresh_config">Fresh Config</string>
 
     <string name="find">FIND YOU</string>
-    <string name="help">HELP ME</string>
+    <string name="help">SAVE ME</string>
     <string name="reset">CANCEL</string>
     <string name="mute">MUTE</string>
 
@@ -21,9 +21,9 @@
     <string name="camera_video">Purchase this video</string>
     <string name="about">About Help SAVE Me!</string>
 
-    <string name="help_msg">Please HELP ME!</string>
-    <string name="findme_msg">Will FIND YOU</string>
-    <string name="HelpStarted">A HELP ME! is already in progress.</string>
+    <string name="help_msg">Please SAVE ME!</string>
+    <string name="findme_msg">I Will FIND YOU</string>
+    <string name="HelpStarted">A SAVE ME! is already in progress.</string>
     <string name="FindStarted">A FIND YOU is already in progress.</string>
     <string name="CancelSession">Canceling this session.</string>
     <string name="MuteSound">Muting the sound, for this session.</string>
@@ -31,10 +31,20 @@
 
     <string name="findbtn_msg">This will start a HELP session.  \nCan only start one HELP at a time. \nDisabled if a RESCUE active.</string>
 
-    <string name="about_helpfindme">Help Find Save Me! is a simple Android app, to render assistence, to someone, in trouble.</string>
+    <string name="about_helpfindme">Help "Find &amp; SAVE ME!" is a simple Android app, to render assistence, to someone, in need!</string>
     <string name="TimeStampSeed">yyyy.MM.dd.HH.mm.ss</string>
     <string name="Iagree">I Agree</string>
     <string name="TERMSandCONDITIONS">Terms and Conditions</string>
     <string name="mutemenu">Mute Audio</string>
+
+    <!-- PLEASE KEEP THIS App ID IN SAFE PLACE -->
+    <!-- Get your own App ID at https://dashboard.agora.io/ -->
+    <!-- After you entered the App ID, remove <##> outside of Your App ID -->
+    <string name="agora_app_id">183aace3905143cba43195559cb038f8</string>
+    <!-- Obtain a temp Access Token at https://dashboard.agora.io -->
+    <!-- You will need to deploy your own token server for production release -->
+    <!-- Leave this value empty if Security keys/Token is not enabled for your project -->
+    <string name="agora_access_token">e84ad8f0d0694073ad815cc58978677b</string>
+
 
 </resources>

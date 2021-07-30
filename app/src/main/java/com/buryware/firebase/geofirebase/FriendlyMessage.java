@@ -35,15 +35,19 @@ public class FriendlyMessage {
     private String phone;
     private String lat;
     private String longi;
+    private String fromto;
     private String timeStamp;
+
+    private String device_id;
+    private String timestamp;
 
     public FriendlyMessage() {
     }
 
-    public FriendlyMessage(String mUid, String username, String password, String email, String phone, String status, String minutesleft, String lat, String longi, String timeStamp,String helpid) {
+    public FriendlyMessage(String mUid, String username, String password, String email, String phone, String status, String minutesleft, String lat, String longi, String timeStamp, String helpid, String fromto) {
     }
 
-    public FriendlyMessage(String username, String password, String email, String phone, String msgType, String minutesleft, String lat, String longi, String timeStamp, String helpid) {
+    public FriendlyMessage(String username, String password, String email, String phone, String msgType, String minutesleft, String lat, String longi, String timeStamp, String helpid, String fromtoString) {
         this.msgType = msgType;
         this.helpid = helpid;
         this.minutesleft = minutesleft;
@@ -53,7 +57,9 @@ public class FriendlyMessage {
         this.phone = phone;
         this.lat = lat;
         this.longi = longi;
+        this.fromto = fromto;
         this.timeStamp = timeStamp;
+        this.device_id = device_id;
     }
 
     public String getId() {
@@ -78,6 +84,14 @@ public class FriendlyMessage {
 
     public void setmsgType(String text) {
         this.msgType = text;
+    }
+
+    public String getFromTo() {
+        return fromto;
+    }
+
+    public void setFromTo(String visible) {
+        this.fromto = visible;
     }
 
     public String getusername() {
@@ -135,6 +149,14 @@ public class FriendlyMessage {
     public LatLng getLatLng() {
 
         return new LatLng(Double.parseDouble(lat), Double.parseDouble(longi));
+    }
+
+    public String getDeviceId() {
+        return device_id;
+    }
+
+    public void setDeviceId(String device_id) {
+        this.id = device_id;
     }
 
     //public void setlatlong(GeoLocation latlong) {

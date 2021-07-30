@@ -23,6 +23,7 @@
 package com.buryware.firebase.geofirebase;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -34,49 +35,49 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
+
+import android.provider.Settings.Secure;
+
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.ConsoleMessage;
+import android.view.ViewParent;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
-import com.firebase.geofire.GeoQueryDataEventListener;
-import com.firebase.geofire.GeoQueryEventListener;
-import com.firebase.geofire.LocationCallback;
 import com.firebase.ui.auth.AuthUI;
+
+import com.firebase.ui.auth.BuildConfig;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
 import com.google.android.gms.appinvite.AppInviteInvitation;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -95,7 +96,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -107,13 +107,9 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.BuildConfig;
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.google.firebase.auth.ActionCodeSettings;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -121,10 +117,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
-import static android.webkit.ConsoleMessage.*;
+import io.agora.rtc.Constants;
+import io.agora.rtc.IRtcEngineEventHandler;
+import io.agora.rtc.RtcEngine;
+import io.agora.rtc.video.VideoCanvas;
+import io.agora.rtc.video.VideoEncoderConfiguration;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -136,7 +134,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationManager mLocationManager;
     private Location mLastKnownLocation;
     private Location mCurrentLocation;
-    private LocationListener mLocationListener;
 
     // Firebase instance variables
     private FirebaseAuth mAuth = null;
@@ -146,13 +143,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseAnalytics mFirebaseAnalytics;
     private GeoQuery geoQuery;
 
-    private GoogleSignInClient mSignInClient;
     private static final String MESSAGE_URL = "http://friendlychat.firebase.google.com/message/";
 
     private Button mSendButton;
     private Button mFindButton;
     private Button mCancelButton;
     private Button mMuteButton;
+    private Button mFlipCameraButton;
     private ProgressBar mProgress;
     private RecyclerView mMessageRecyclerView;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
@@ -161,22 +158,45 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private EditText mMessageEditText;
     private ImageView mAddMessageImageView;
 
+    private RtcEngine mRtcEngine;
+    private FrameLayout mLocalContainer = null;
+    private SurfaceView mLocalView = null;
+    private FrameLayout mRemoteContainer = null;
+    private SurfaceView mRemoteView = null;
+    private VideoCanvas mLocalVideo;
+    private VideoCanvas mRemoteVideo;
+    private static String channelName;
+    private static int channelProfile;
+
     // HelpFindMeAndSaveME user params
     private String mUid;
+    private String this_device_id;
     private String mUsername;
     private String mPassword;
     private String mPhoneNumber;
     private Uri mPhotoUrl;
     private String mEmail;
     private String mMinutes = "5000";
-    private GeoLocation mCurrentGeoLocation;
+
+    //   private GeoLocation mCurrentGeoLocation;
+    private Location gps_loc, network_loc, final_loc;
+    private double longitude;
+    private double latitude;
     private LatLng debugLatLng = null;
-    private boolean mEmailVerified;
+    private Polyline mLastPolyline = null;
+
+    private FriendlyMessage helpmsg = null;
+    private FriendlyMessage findmsg = null;
+
+    private boolean mEmailVerified = false;
     private boolean bHelpMe = false;
     private boolean bFindMe = false;
     private boolean bMuted = false;
+    private boolean bCallEnd = false;
+    private boolean bFrontCamera = true;
     private int mSelectedHelp;
 
+    private static final int PERMISSION_REQ_ID = 22;
     private static final int TWENTY_MINUTES = 1000 * 60 * 20;
     private static final int PERMISSION_REQUEST_CODE = 1;
     private static final int PERMISSION_REQUEST_GPS = 2;
@@ -190,21 +210,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int RC_SIGN_IN = 007;
     public static final String MESSAGES_CHILD = "messages";
 
+    // Ask for Android device permissions at runtime.
+    private static final String[] REQUESTED_PERMISSIONS = {Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+    @SuppressLint("MissingPermission")
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+     //   Intent intent = getIntent();
+     //   channelName = intent.getStringExtra(MapsActivity.channelName);
+    //    channelProfile = intent.getIntExtra(String.valueOf(MapsActivity.channelProfile), -1);
+
+        this_device_id = Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID);
+
         LocationMarkers = new ArrayList<Marker>();
         mLocationProvider = LocationManager.GPS_PROVIDER;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            if (mLocationProvider.isEmpty()) {
-                mLocationProvider = LocationManager.NETWORK_PROVIDER;
-            }
+        if (mLocationProvider.isEmpty()) {
+            mLocationProvider = LocationManager.NETWORK_PROVIDER;
         }
 
-        bFindMe = bHelpMe =  false;
-        mSelectedHelp = -1;
+        bFindMe = bHelpMe = false;
+        mSelectedHelp = 0;  // sos BUG!  TODO
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -221,19 +249,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     new AuthUI.IdpConfig.FacebookBuilder().build(),
                     new AuthUI.IdpConfig.TwitterBuilder().build());*/
 
-            List<AuthUI.IdpConfig> providers = Arrays.asList(
-                    new AuthUI.IdpConfig.EmailBuilder().build(),
-                    new AuthUI.IdpConfig.PhoneBuilder().build(),
-                    new AuthUI.IdpConfig.GoogleBuilder().build());
+            List<AuthUI.IdpConfig> providers = Arrays.asList(new AuthUI.IdpConfig.EmailBuilder().build(), new AuthUI.IdpConfig.PhoneBuilder().build(), new AuthUI.IdpConfig.GoogleBuilder().build());
 
             // Create and launch sign-in intent
-            startActivityForResult(
-                    AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setAvailableProviders(providers)
-                            .setLogo(R.mipmap.burywareb)
-                            .build(),
-                    RC_SIGN_IN);
+            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).setLogo(R.mipmap.burywareb).build(), RC_SIGN_IN);
 
             finish();
             return;
@@ -271,10 +290,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        GoogleSignInOptions signinoptions =
-                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .build();
-        mSignInClient = GoogleSignIn.getClient(this, signinoptions);
+        GoogleSignInOptions signinoptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build();
+        GoogleSignInClient mSignInClient = GoogleSignIn.getClient(this, signinoptions);
 
         // Initialize Firebase Measurement.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
@@ -283,7 +300,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
         // Define Firebase Remote Config Settings.
-        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings = new FirebaseRemoteConfigSettings.Builder().setDeveloperModeEnabled(true).build();
+        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings = new FirebaseRemoteConfigSettings.Builder().build();
 
         // Define default config values. Defaults are used when fetched config values are not
         // available. Eg: if an error occurred fetching values from the server.
@@ -291,8 +308,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         defaultConfigMap.put("friendly_msg_length", 120L);
 
         // Apply config settings and default values.
-        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+        mFirebaseRemoteConfig.setConfigSettingsAsync(firebaseRemoteConfigSettings);
+        mFirebaseRemoteConfig.setDefaultsAsync(defaultConfigMap);
 
         // Fetch remote config.
         fetchConfig();
@@ -318,10 +335,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         };
 
         DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
-        FirebaseRecyclerOptions<FriendlyMessage> options =
-                new FirebaseRecyclerOptions.Builder<FriendlyMessage>()
-                        .setQuery(messagesRef, parser)
-                        .build();
+        FirebaseRecyclerOptions<FriendlyMessage> options = new FirebaseRecyclerOptions.Builder<FriendlyMessage>().setQuery(messagesRef, parser).build();
         mFirebaseAdapter = new FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>(options) {
             @Override
             public MessageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
@@ -330,31 +344,36 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
 
             @Override
-            protected void onBindViewHolder(final MessageViewHolder viewHolder,
-                                            int position,
-                                            FriendlyMessage friendlyMessage) {
+            protected void onBindViewHolder(final MessageViewHolder viewHolder, int position, FriendlyMessage friendlyMessage) {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (friendlyMessage.getmsgType() != null) {
                     viewHolder.messageTextView.setText(friendlyMessage.getmsgType());
 
                     if (friendlyMessage.getmsgType().equals(getResources().getString(R.string.findme_msg))) {
                         viewHolder.messageTextView.setTextColor(Color.BLUE);
-                        for (int i = position-1; i >=0; i--){
+                        for (int i = position - 1; i >= 0; i--) {
 
                             FriendlyMessage helpmsg = mFirebaseAdapter.getItem(i);
-                            if (friendlyMessage.gethelpid().equals(helpmsg.getId())) {
+                            if (friendlyMessage.gethelpid().equals(helpmsg.gethelpid())) {
+
+                                if (mLastPolyline != null) {  // If we have an old one, remove it
+                                    for (int j = 0; j < LocationMarkers.size(); j++) {
+                                        if (LocationMarkers.get(j).getTitle() == this_device_id) {
+                                            LocationMarkers.remove(j);
+                                        }
+                                    }
+                                    mLastPolyline.remove();
+                                }
 
                                 final int PATTERN_GAP_LENGTH_PX = 20;
                                 final PatternItem DOT = new Dot();
                                 final PatternItem GAP = new Gap(PATTERN_GAP_LENGTH_PX);
                                 final List<PatternItem> PATTERN_POLYLINE_DOTTED = Arrays.asList(GAP, DOT);
-                                Polyline polyline = mMap.addPolyline(new PolylineOptions()
-                                        .add(helpmsg.getLatLng())
-                                        .add(friendlyMessage.getLatLng())
-                                        .pattern(PATTERN_POLYLINE_DOTTED)
-                                        .color(Color.YELLOW)
-                                        .width(5f));
+                                Polyline polyline = mMap.addPolyline(new PolylineOptions().add(helpmsg.getLatLng()).add(friendlyMessage.getLatLng()).pattern(PATTERN_POLYLINE_DOTTED).color(Color.YELLOW).width(5f));
                                 onMapAddHelpGPSSelected(helpmsg.getLatLng());
+                                helpmsg.setFromTo(polyline.toString());
+                                mLastPolyline = polyline;
+
                                 break;
                             }
                         }
@@ -380,9 +399,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // If the recycler view is initially being loaded or the
                 // user is at the bottom of the list, scroll to the bottom
                 // of the list to show the newly added message.
-                if (lastVisiblePosition == -1 ||
-                        (positionStart >= (friendlyMessageCount - 1) &&
-                                lastVisiblePosition == (positionStart - 1))) {
+                if (lastVisiblePosition == -1 || (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
                     mMessageRecyclerView.scrollToPosition(positionStart);
                 }
             }
@@ -391,84 +408,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
         mProgress = findViewById(R.id.progressBar);
 
-        mLocationProvider = LocationManager.GPS_PROVIDER;
-        if (mLocationProvider.isEmpty()) {
-            mLocationProvider = LocationManager.NETWORK_PROVIDER;
-        }
-
-        mLocationManager = (LocationManager) getApplication().getSystemService(Context.LOCATION_SERVICE);
-
-      /*  DatabaseReference georef = FirebaseDatabase.getInstance().getReference("geofire");
-        final GeoFire geoFire = new GeoFire(georef);
-
-        //mCurrentGeoLocation.latitude = 47.624690;
-        //mCurrentGeoLocation.longitude = -122.131130;
-       // geoFire.setLocation("firebase-hq", new GeoLocation(47.624690, -122.131130));  // todo set to current location
-
-        geoFire.getLocation("firebase-hq", new LocationCallback() {
-            @Override
-            public void onLocationResult(String key, GeoLocation location) {
-                if (location != null) {
-                    System.out.println(String.format("The location for key %s is [%f,%f]", key, location.latitude, location.longitude));
-
-                    geoQuery = geoFire.queryAtLocation(new GeoLocation(location.latitude, location.longitude), 0.8);
-                    geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-                        @Override
-                        public void onKeyEntered(String key, GeoLocation location) {
-                            System.out.println(String.format("Key %s entered the search area at [%f,%f]", key, location.latitude, location.longitude));
-                        }
-
-                        @Override
-                        public void onKeyExited(String key) {
-                            System.out.println(String.format("Key %s is no longer in the search area", key));
-                        }
-
-                        @Override
-                        public void onKeyMoved(String key, GeoLocation location) {
-                            System.out.println(String.format("Key %s moved within the search area to [%f,%f]", key, location.latitude, location.longitude));
-                        }
-
-                        @Override
-                        public void onGeoQueryReady() {
-                            System.out.println("All initial data has been loaded and events have been fired!");
-                        }
-
-                        @Override
-                        public void onGeoQueryError(DatabaseError error) {
-                            System.err.println("There was an error with this query: " + error);
-                        }
-                    });
-
-                    mCurrentGeoLocation = location;
-
-                } else {
-                    System.out.println(String.format("There is no location for key %s in GeoFire", key));
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });*/
-
         // Ensure an updated security provider is installed into the system when a new one is
         // available via Google Play services.
         try {
-            ProviderInstaller.installIfNeededAsync(getApplicationContext(),
-                    new ProviderInstaller.ProviderInstallListener() {
-                        @Override
-                        public void onProviderInstalled() {
-                            //Toast("New security provider installed.");
-                            installPlayServiceSecurityUpdates();
-                        }
+            ProviderInstaller.installIfNeededAsync(getApplicationContext(), new ProviderInstaller.ProviderInstallListener() {
+                @Override
+                public void onProviderInstalled() {
+                    //Toast("New security provider installed.");
+                    installPlayServiceSecurityUpdates();
+                }
 
-                        @Override
-                        public void onProviderInstallFailed(int errorCode, Intent intent) {
-                            System.out.println("New security provider install failed.");
-                            // No notification shown there is no user intervention needed.
-                        }
-                    });
+                @Override
+                public void onProviderInstallFailed(int errorCode, Intent intent) {
+                    System.out.println("New security provider install failed.");
+                    // No notification shown there is no user intervention needed.
+                }
+            });
         } catch (Exception ignorable) {
             System.out.println("Unknown issue trying to install a new security provider.");
         }
@@ -479,33 +434,43 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onClick(View view) {
 
                 if (bHelpMe) {
-                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.HelpStarted, Toast.LENGTH_LONG);
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.HelpStarted, Toast.LENGTH_SHORT);
                     toast.show();
 
                 } else if (bFindMe) {
-                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.FindStarted, Toast.LENGTH_LONG);
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.FindStarted, Toast.LENGTH_SHORT);
                     toast.show();
 
                 } else {
-                    String lat = "47.624690";  // todo current location
-                    String lng = "-122.131130";
+                    mProgress.setVisibility(View.VISIBLE);
 
-                    //  if (BuildConfig.DEBUG) {
-                    if (debugLatLng != null) {
-                        lat = String.valueOf(debugLatLng.latitude);
-                        lng = String.valueOf(debugLatLng.longitude);
+                    String lat = String.valueOf(latitude);
+                    String lng = String.valueOf(longitude);
+
+                    if (BuildConfig.DEBUG) {
+                        if (debugLatLng != null) {
+                            lat = String.valueOf(debugLatLng.latitude);
+                            lng = String.valueOf(debugLatLng.longitude);
+                        }
                     }
-                    // }
+
+                    setupVideoConfig();
+                    setupLocalVideo();
+
+                    mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING);
+                    channelProfile = Constants.CLIENT_ROLE_BROADCASTER;
+                    mRtcEngine.setClientRole(channelProfile);
+
+                    joinChannel();
+                    showButtons(true);
 
                     String timeStamp = new SimpleDateFormat(getString(R.string.TimeStampSeed)).format(new Date());
-                    FriendlyMessage friendlyMessage = new FriendlyMessage("Steve", "1234", "sos@gmail.com", "(424) 679-6456",
-                            getString(R.string.help_msg), "500", lat, lng, timeStamp.toString(), "0");
-                    mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
+                    helpmsg = new FriendlyMessage("Steve", "1234", "sos@gmail.com", "(424) 679-6456", getString(R.string.help_msg), "500", lat, lng, timeStamp, "this_device_id", "0");
+                    mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(helpmsg);
                     mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
                     bHelpMe = true;
                     debugLatLng = null;
-
-                    mProgress.setVisibility(View.VISIBLE);
+                    mProgress.setVisibility(View.INVISIBLE);
                 }
             }
         });
@@ -515,35 +480,49 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onClick(View view) {
                 if (bHelpMe) {
-                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.HelpStarted, Toast.LENGTH_LONG);
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.HelpStarted, Toast.LENGTH_SHORT);
                     toast.show();
 
                 } else if (bFindMe) {
-                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.FindStarted, Toast.LENGTH_LONG);
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.FindStarted, Toast.LENGTH_SHORT);
                     toast.show();
 
                 } else {
-                    String lat = "47.624690";  // todo current location
-                    String lng = "-122.131130";
+                    mProgress.setVisibility(View.VISIBLE);
 
-                    //if (BuildConfig.DEBUG) {
+                    String lat = String.valueOf(latitude);
+                    String lng = String.valueOf(longitude);
+
                     if (debugLatLng != null) {
                         lat = String.valueOf(debugLatLng.latitude);
                         lng = String.valueOf(debugLatLng.longitude);
                     }
-                    //  }
 
-                    FriendlyMessage helpmsg = mFirebaseAdapter.getItem(mSelectedHelp);
+                    if (mSelectedHelp > -1) {
+                        helpmsg = mFirebaseAdapter.getItem(mSelectedHelp);
 
-                    String timeStamp = new SimpleDateFormat(getString(R.string.TimeStampSeed)).format(new Date());
-                    FriendlyMessage friendlyMessage = new FriendlyMessage("Steve", "1234", "sos@gmail.com", "(424) 679-6456",
-                            getResources().getString(R.string.findme_msg), "500", lat, lng, timeStamp.toString(), helpmsg.getId());
-                    mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
-                    mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
-                    bFindMe = true;
-                    debugLatLng = null;
+                        String timeStamp = new SimpleDateFormat(getString(R.string.TimeStampSeed)).format(new Date());
+                        findmsg = new FriendlyMessage("Steve", "1234", "sos@gmail.com", "(424) 679-6456", getResources().getString(R.string.findme_msg), "500", lat, lng, timeStamp.toString(), helpmsg.gethelpid(), this_device_id);
+                        mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(findmsg);
+                        mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+                        bFindMe = true;
+                        debugLatLng = null;
+                    } else {
+                        Toast toast = Toast.makeText(getApplication().getBaseContext(), "No selected people to find.", Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
 
-                    mProgress.setVisibility(View.VISIBLE);
+                    setupVideoConfig();
+                    setupLocalVideo();
+
+                    mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING);
+                    channelProfile = Constants.CLIENT_ROLE_AUDIENCE;
+                    mRtcEngine.setClientRole(channelProfile);
+
+                    joinChannel();
+                    showButtons(true);
+
+                    mProgress.setVisibility(View.INVISIBLE);
                 }
             }
         });
@@ -563,7 +542,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
 */
                 bHelpMe = bFindMe = false;
-                Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.CancelSession , Toast.LENGTH_SHORT);
+                findmsg = helpmsg = null;
+
+                removeFromParent(mLocalVideo);
+                mLocalVideo = null;
+                removeFromParent(mRemoteVideo);
+                mRemoteVideo = null;
+                mRtcEngine.leaveChannel();
+
+                mProgress.setVisibility(View.INVISIBLE);
+                showButtons(false);
+
+                Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.CancelSession, Toast.LENGTH_SHORT);
                 toast.show();
             }
         });
@@ -573,35 +563,249 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onClick(View view) {
 
+                onLocalAudioMuteClicked(null);
+
                 Drawable[] drawables = mMuteButton.getCompoundDrawables();
                 Drawable leftCompoundDrawable = drawables[1];
-
                 if (!bMuted) {
-                    bMuted = true;
-
                     Drawable img = getApplicationContext().getResources().getDrawable(R.mipmap.mutedmic);
                     img.setBounds(leftCompoundDrawable.getBounds());
                     mMuteButton.setCompoundDrawables(null, img, null, null);
 
-                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.MuteSound , Toast.LENGTH_SHORT);
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.MuteSound, Toast.LENGTH_SHORT);
                     toast.show();
                 } else {
-                    bMuted = false;
-
                     Drawable img = getApplicationContext().getResources().getDrawable(R.mipmap.nonmutedmic);
                     img.setBounds(leftCompoundDrawable.getBounds());
                     mMuteButton.setCompoundDrawables(null, img, null, null);
 
-                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.UnMuteSound , Toast.LENGTH_LONG);
+                    Toast toast = Toast.makeText(getApplication().getBaseContext(), R.string.UnMuteSound, Toast.LENGTH_SHORT);
                     toast.show();
                 }
             }
         });
 
+        mFlipCameraButton = (Button) findViewById(R.id.CameraflipButton);
+        mFlipCameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mRtcEngine.switchCamera();
+                bFrontCamera = !bFrontCamera;
+            }
+        });
+
+        mLocalContainer = (FrameLayout) findViewById(R.id.local_video_view_container);
+        mRemoteContainer = (FrameLayout) findViewById(R.id.remote_video_view_container);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        // If all the permissions are granted, initialize the RtcEngine object and join a channel.
+        if (checkSelfPermission(REQUESTED_PERMISSIONS[0], PERMISSION_REQ_ID) && checkSelfPermission(REQUESTED_PERMISSIONS[1], PERMISSION_REQ_ID) && checkSelfPermission(REQUESTED_PERMISSIONS[2], PERMISSION_REQ_ID)) {
+            initEngineAndJoinChannel();
+        }
+    }
+
+    private void initEngineAndJoinChannel() {
+        initializeEngine();
+    }
+
+    private final IRtcEngineEventHandler mRtcEventHandler = new IRtcEngineEventHandler() {
+        @Override
+        // Listen for the onJoinChannelSuccess callback.
+        // This callback occurs when the local user successfully joins the channel.
+        public void onJoinChannelSuccess(String channel, final int uid, int elapsed) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i("agora", "Join channel success, uid: " + (uid & 0xFFFFFFFFL));
+                }
+            });
+        }
+
+        @Override
+        // Listen for the onFirstRemoteVideoDecoded callback.
+        // This callback occurs when the first video frame of a remote user is received and decoded after the remote user successfully joins the channel.
+        // You can call the setupRemoteVideo method in this callback to set up the remote video view.
+        public void onFirstRemoteVideoDecoded(final int uid, int width, int height, int elapsed) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i("agora", "First remote video decoded, uid: " + (uid & 0xFFFFFFFFL));
+                    setupRemoteVideo(uid);
+                }
+            });
+        }
+
+        @Override
+        // Listen for the onUserOffline callback.
+        // This callback occurs when the remote user leaves the channel or drops offline.
+        public void onUserOffline(final int uid, int reason) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i("agora", "User offline, uid: " + (uid & 0xFFFFFFFFL));
+                        onRemoteUserLeft(uid);
+                }
+            });
+        }
+    };
+
+    // Listen for the onFirstRemoteVideoDecoded callback.
+    // This callback occurs when the first video frame of a remote user is received and decoded after the remote user successfully joins the channel.
+    // You can call the setupRemoteVideo method in this callback to set up the remote video view.
+    public void onFirstRemoteVideoDecoded(final int uid, int width, int height, int elapsed) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i("agora", "First remote video decoded, uid: " + (uid & 0xFFFFFFFFL));
+                setupRemoteVideo(uid);
+            }
+        });
+    }
+
+    private void onRemoteUserLeft(int uid) {
+        if (mRemoteVideo != null && mRemoteVideo.uid == uid) {
+            removeFromParent(mRemoteVideo);
+            // Destroys remote view
+            mRemoteVideo = null;
+        }
+    }
+
+    private void setupRemoteVideo(int uid) {
+
+        mRtcEngine.enableVideo();
+
+        ViewGroup parent = mRemoteContainer;
+        if (parent.indexOfChild(mLocalVideo.view) > -1) {
+            parent = mLocalContainer;
+        }
+
+        // Only one remote video view is available for this
+        // tutorial. Here we check if there exists a surface
+        // view tagged as this uid.
+        if (mRemoteVideo != null) {
+            return;
+        }
+
+        /*
+          Creates the video renderer view.
+          CreateRendererView returns the SurfaceView type. The operation and layout of the view
+          are managed by the app, and the Agora SDK renders the view provided by the app.
+          The video display view must be created using this method instead of directly
+          calling SurfaceView.
+         */
+        SurfaceView view = RtcEngine.CreateRendererView(getBaseContext());
+        view.setZOrderMediaOverlay(parent == mLocalContainer);
+        parent.addView(view);
+        mRemoteVideo = new VideoCanvas(view, VideoCanvas.RENDER_MODE_HIDDEN, uid);
+        // Initializes the video view of a remote user.
+        mRtcEngine.setupRemoteVideo(mRemoteVideo);
+    }
+
+    // Initialize the RtcEngine object.
+    private void initializeEngine() {
+        try {
+            mRtcEngine = RtcEngine.create(getBaseContext(), getString(R.string.agora_app_id), mRtcEventHandler);
+        } catch (Exception e) {
+            Log.e(TAG, Log.getStackTraceString(e));
+            throw new RuntimeException("NEED TO check rtc sdk init fatal error\n" + Log.getStackTraceString(e));
+        }
+    }
+
+    private void setupVideoConfig() {
+        // In simple use cases, we only need to enable video capturing
+        // and rendering once at the initialization step.
+        // Note: audio recording and playing is enabled by default.
+
+        // Please go to this page for detailed explanation
+        // https://docs.agora.io/en/Video/API%20Reference/java/classio_1_1agora_1_1rtc_1_1_rtc_engine.html#af5f4de754e2c1f493096641c5c5c1d8f
+        mRtcEngine.setVideoEncoderConfiguration(new VideoEncoderConfiguration(
+                VideoEncoderConfiguration.VD_640x480,
+                VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15,
+                VideoEncoderConfiguration.STANDARD_BITRATE,
+                VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT));
+    }
+
+    private void setupLocalVideo() {
+        // This is used to set a local preview.
+        // The steps setting local and remote view are very similar.
+        // But note that if the local user do not have a uid or do
+        // not care what the uid is, he can set his uid as ZERO.
+        // Our server will assign one and return the uid via the event
+        // handler callback function (onJoinChannelSuccess) after
+        // joining the channel successfully.
+
+        // Create a SurfaceView object.
+        mLocalView = RtcEngine.CreateRendererView(getBaseContext());
+        mLocalView.setZOrderMediaOverlay(true);
+        mLocalContainer.addView(mLocalView);
+        // Set the local video view.
+        VideoCanvas localVideoCanvas = new VideoCanvas(mLocalView, VideoCanvas.RENDER_MODE_HIDDEN, 0);
+        mRtcEngine.setupLocalVideo(localVideoCanvas);
+    }
+
+    private void showButtons(boolean show) {
+        int visibility = show ? View.VISIBLE : View.GONE;
+
+        mMuteButton.setVisibility(visibility);
+        mFlipCameraButton.setVisibility(visibility);
+    }
+
+  /*  private void startCall() {
+        setupLocalVideo();
+        joinChannel();
+    }
+
+    private void endCall() {
+        removeFromParent(mLocalVideo);
+        mLocalVideo = null;
+        removeFromParent(mRemoteVideo);
+        mRemoteVideo = null;
+        leaveChannel();
+    }*/
+
+    private void joinChannel() {
+        // Join a channel with a token.
+        mRtcEngine.joinChannel(getString(R.string.agora_access_token), "HelpFindAndSaveME", "Extra Optional Data", 0);
+    }
+
+    public void onLocalAudioMuteClicked(View view) {
+        bMuted = !bMuted;
+        mRtcEngine.muteLocalAudioStream(bMuted);
+    }
+
+    private ViewGroup removeFromParent(VideoCanvas canvas) {
+        if (canvas != null) {
+            ViewParent parent = canvas.view.getParent();
+            if (parent != null) {
+                ViewGroup group = (ViewGroup) parent;
+                group.removeView(canvas.view);
+                return group;
+            }
+        }
+        return null;
+    }
+
+    private void switchView(VideoCanvas canvas) {
+        ViewGroup parent = removeFromParent(canvas);
+        if (parent == mLocalContainer) {
+            if (canvas.view instanceof SurfaceView) {
+                ((SurfaceView) canvas.view).setZOrderMediaOverlay(false);
+            }
+            mRemoteContainer.addView(canvas.view);
+        } else if (parent == mRemoteContainer) {
+            if (canvas.view instanceof SurfaceView) {
+                ((SurfaceView) canvas.view).setZOrderMediaOverlay(true);
+            }
+            mLocalContainer.addView(canvas.view);
+        }
+    }
+
+    public void onLocalContainerClick(View view) {
+        switchView(mLocalVideo);
+        switchView(mRemoteVideo);
     }
 
     public class MessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -612,6 +816,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             itemView.setOnClickListener(this);
             messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
         }
+
         @Override
         public void onClick(View v) {
             //Toast.makeText(v.getContext(), "position = " + getLayoutPosition(), Toast.LENGTH_SHORT).show();
@@ -626,7 +831,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mSelectedHelp = getLayoutPosition();
                 onMapAddHelpGPSSelected(msg.getLatLng());
             } else {
-                Toast toast = Toast.makeText(getApplication().getBaseContext(), "Only HELP ME entries can be selectted.", Toast.LENGTH_LONG);
+                Toast toast = Toast.makeText(getApplication().getBaseContext(), "Only HELP ME entries can be selectted.", Toast.LENGTH_SHORT);
                 toast.show();
             }
         }
@@ -636,9 +841,73 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onStart() {
         super.onStart();
 
-        if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestForGPSPermission();
+        }
+
+        mLocationManager = (LocationManager) getApplication().getSystemService(Context.LOCATION_SERVICE);
+        LocationListener mLocationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(android.location.Location location) {
+                double latitude = location.getLatitude();
+                double longitude = location.getLongitude();
+                String msg = "New Latitude: " + latitude + "New Longitude: " + longitude;
+
+                UpdateGPSPtsInMsgs(location);
+                Toast.makeText(getBaseContext(),msg,Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+        };
+
+        mLocationManager.requestLocationUpdates(mLocationProvider, 10000, 3, mLocationListener);
+        mLastKnownLocation = mLocationManager.getLastKnownLocation(mLocationProvider);
+
+        gps_loc = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        network_loc = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+        if (gps_loc != null) {
+            final_loc = gps_loc;
+            latitude = final_loc.getLatitude();
+            longitude = final_loc.getLongitude();
+        }
+        else if (network_loc != null) {
+            final_loc = network_loc;
+            latitude = final_loc.getLatitude();
+            longitude = final_loc.getLongitude();
+        }
+        else {
+            // default to where are we?
+            latitude = getLocationLatLong().latitude;;
+            longitude = getLocationLatLong().longitude;
+        }
+    }
+
+    private void UpdateGPSPtsInMsgs(Location location){
+
+    //    mMap.clear();
+
+        if (bHelpMe || bFindMe) {
+
+            location.setLatitude(999999.99);
+            location.setLongitude(999999.99);
+
+            mFirebaseDatabaseReference.child("lat").setValue(location.getLatitude());
+            mFirebaseDatabaseReference.child("longi").setValue(location.getLongitude());
+            mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+
+        } else {
+            assert(true);
         }
     }
 
@@ -657,6 +926,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        if (!bCallEnd) {
+            leaveChannel();
+        }
+        if (mRtcEngine != null) {
+            RtcEngine.destroy();
+        }
+    }
+
+    private void leaveChannel() {
+        // Leave the current channel.
+        if (mRtcEngine != null) {
+            mRtcEngine.leaveChannel();
+        }
     }
 
     /**
@@ -665,10 +948,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     private void installPlayServiceSecurityUpdates() {
         try {
-
             ProviderInstaller.installIfNeeded(getApplicationContext());
 
-        } catch (Exception e ) {
+        } catch (Exception e) {
             Log.e(TAG, "Error installing play service features", e);
         }
     }
@@ -686,6 +968,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQUEST_AUDIO);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
@@ -700,18 +983,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             case PERMISSION_REQUEST_GPS:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     try {
-                        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                            // TODO: Consider calling
-                            //    ActivityCompat#requestPermissions
-                            // here to request the missing permissions, and then overriding
-                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                            //                                          int[] grantResults)
-                            // to handle the case where the user grants the permission. See the documentation
-                            // for ActivityCompat#requestPermissions for more details.
-                            return;
-                        }
-                        mLocationManager.requestLocationUpdates(mLocationProvider, 0, 0, mLocationListener);
-                        mLastKnownLocation = mLocationManager.getLastKnownLocation(mLocationProvider);
                         onMapReady(mMap);
 
                     } catch (Exception e) {
@@ -725,17 +996,40 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                         requestForAudioPermission();
                     }
-                    // doStartVideoStreaming();  // sos todo agora videostreming
                 }
                 break;
 
             case PERMISSION_REQUEST_AUDIO:
 
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // doStartVideoStreaming();  // sos todo agora videostreming
+                    // TODO
                 }
                 break;
+
+            case PERMISSION_REQ_ID:
+                if (grantResults[0] != PackageManager.PERMISSION_GRANTED ||
+                        grantResults[1] != PackageManager.PERMISSION_GRANTED ||
+                        grantResults[2] != PackageManager.PERMISSION_GRANTED) {
+                   /* showLongToast("Need permissions " + Manifest.permission.RECORD_AUDIO +
+                            "/" + Manifest.permission.CAMERA + "/" + Manifest.permission.WRITE_EXTERNAL_STORAGE);*/
+                    finish();
+                    return;
+                }
+
+                // Here we continue only if all permissions are granted.
+                // The permissions can also be granted in the system settings manually.
+                initEngineAndJoinChannel();
+                break;
         }
+    }
+
+    private boolean checkSelfPermission(String permission, int requestCode) {
+        if (ContextCompat.checkSelfPermission(this, permission) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, REQUESTED_PERMISSIONS, requestCode);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -753,7 +1047,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = googleMap;
 
     //    LatLng mLatLng = new LatLng(mCurrentGeoLocation.latitude, mCurrentGeoLocation.longitude);
-        LatLng mLatLng = new LatLng(47.624690, -122.131130);
+    //    LatLng mLatLng = new LatLng(47.624690, -122.131130);
+        LatLng mLatLng = new LatLng(latitude, longitude);
 
         if (!bHelpMe && !bFindMe) {
             mMap.addMarker(new MarkerOptions().position(mLatLng).title("Current location:"));
@@ -777,43 +1072,71 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 onMapAddLocation(location);
             }
         });
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng location) {
+                onMapChangeLocation(location);
+            }
+        });
+
     }
 
     public void onMapAddLocation(LatLng mNewLatLng) {
-       // if (BuildConfig.DEBUG) {
-            debugLatLng = mNewLatLng;
-       // }
+
+        //  BuildConfig.DEBUG  todo
+        debugLatLng = mNewLatLng;
+        onMapAddDebugGPS(debugLatLng);
+    }
+
+    public void onMapChangeLocation(LatLng mNewLatLng) {
+
+        //  BuildConfig.DEBUG  todo
+        debugLatLng = mNewLatLng;
+        onMapChangeDebugGPS(debugLatLng);
     }
 
     public void onMapAddHelpGPSSelected(LatLng mLatLng) {
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(mLatLng);
+        markerOptions.title(this_device_id);
         markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.helpmapmarkersel2));
-
         LocationMarkers.add(mMap.addMarker(markerOptions));
     }
 
     public void onMapAddHelpGPS(LatLng mLatLng) {
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(mLatLng);
+        markerOptions.title(this_device_id);
         markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.helpmapmarker));
+        LocationMarkers.add(mMap.addMarker(markerOptions));
+    }
 
+    public void onMapAddDebugGPS(LatLng mLatLng) {
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(mLatLng);
+        markerOptions.title(this_device_id);
+        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.debugmapmarker));
+        LocationMarkers.add(mMap.addMarker(markerOptions));
+    }
+
+    public void onMapChangeDebugGPS(LatLng mLatLng) {
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(mLatLng);
+        markerOptions.title(this_device_id);
+        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.changemapmarker));
         LocationMarkers.add(mMap.addMarker(markerOptions));
     }
 
     public void onMapAddAssistGPS(LatLng mLatLng) {
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(mLatLng);
+        markerOptions.title(this_device_id);
         markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.findmapmarker));
-
         LocationMarkers.add(mMap.addMarker(markerOptions));
     }
 
     private LatLng getLocationLatLong() {
-        LatLng mLatLong = null;
-
-
-        // geo fire  //  sos todo
+        LatLng mLatLong = getLocationLatLong();
 
         return mLatLong;
     }
@@ -967,14 +1290,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         long cacheExpiration = 3600; // 1 hour in seconds
         // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
         // server. This should not be used in release builds.
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {     // so todo agora
+      // if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {     // so todo agora
             cacheExpiration = 0;
-        }
+       // }
         mFirebaseRemoteConfig.fetch(cacheExpiration).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 // Make the fetched config available via FirebaseRemoteConfig get<type> calls.
-                mFirebaseRemoteConfig.activateFetched();
+                mFirebaseRemoteConfig.activate();
                 applyRetrievedLengthLimit();
             }
         }).addOnFailureListener(new OnFailureListener() {

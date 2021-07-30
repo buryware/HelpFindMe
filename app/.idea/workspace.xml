@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="cc172ec7-846b-41e1-b015-a5130dea208c" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/libs/agora-rtc-sdk.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/release/app-release.aab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/arm64-v8a/libagora-fdkaac.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/arm64-v8a/libagora-ffmpeg.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/arm64-v8a/libagora-mpg123.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/arm64-v8a/libagora-rtc-sdk.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/arm64-v8a/libagora-soundtouch.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/armeabi-v7a/libagora-fdkaac.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/armeabi-v7a/libagora-ffmpeg.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/armeabi-v7a/libagora-mpg123.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/armeabi-v7a/libagora-rtc-sdk.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/armeabi-v7a/libagora-soundtouch.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/include/AgoraBase.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/include/IAgoraMediaEngine.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/include/IAgoraRtcChannel.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/include/IAgoraRtcEngine.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/include/IAgoraService.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86/libagora-fdkaac.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86/libagora-ffmpeg.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86/libagora-mpg123.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86/libagora-rtc-sdk.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86/libagora-soundtouch.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86_64/libagora-fdkaac.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86_64/libagora-ffmpeg.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86_64/libagora-mpg123.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86_64/libagora-rtc-sdk.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/jniLibs/x86_64/libagora-soundtouch.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-hdpi/camrot.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-hdpi/debugmapmarker.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-xxhdpi/icon_agora_large.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-xxhdpi/icon_agora_largest.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proguard-rules.pro" beforeDir="false" afterPath="$PROJECT_DIR$/proguard-rules.pro" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/release/app-release.apk" beforeDir="false" afterPath="$PROJECT_DIR$/release/app-release.apk" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/androidTest/java/com/buryware/firebase/geofirebase/ExampleInstrumentedTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/androidTest/java/com/buryware/firebase/geofirebase/ExampleInstrumentedTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/androidTest/java/com/buryware/firebase/geofirebase/GeoFireIT.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/androidTest/java/com/buryware/firebase/geofirebase/GeoFireIT.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/buryware/firebase/geofirebase/FriendlyMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/buryware/firebase/geofirebase/FriendlyMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/buryware/firebase/geofirebase/MapsActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/buryware/firebase/geofirebase/MapsActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/res/layout/activity_main.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/res/layout/activity_main.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/res/layout/activity_maps.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/res/values/colors.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/res/values/colors.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/res/values/dimens.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/res/values/dimens.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../library/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../library/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../library/proguard-rules.pro" beforeDir="false" afterPath="$PROJECT_DIR$/../library/proguard-rules.pro" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../library/src/main/java/com/firebase/geofire/AndroidEventRaiser.java" beforeDir="false" afterPath="$PROJECT_DIR$/../library/src/main/java/com/firebase/geofire/AndroidEventRaiser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../library/src/main/java/com/firebase/geofire/GeoFire.java" beforeDir="false" afterPath="$PROJECT_DIR$/../library/src/main/java/com/firebase/geofire/GeoFire.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../settings.gradle" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1r2UVbSmoHBNakO2sucNrpYW3NZ" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="android.sdk.path" value="$PROJECT_DIR$/../../../../../Android/AndroidSDK" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/.." />
+    <property name="project.structure.last.edited" value="SDK Location" />
+    <property name="project.structure.proportion" value="0.17" />
+    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="settings.editor.selected.configurable" value="AndroidSdkUpdater" />
+  </component>
+  <component name="RunManager">
+    <configuration name="&lt;template&gt;" type="Applet" default="true" selected="false">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="singleModule" />
+      </option>
+      <envs />
+      <patterns />
+      <method />
+    </configuration>
+    <configuration name="&lt;template&gt;" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" default="true" selected="false">
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="TestNG">
+      <option name="TEST_OBJECT" value="CLASS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="cc172ec7-846b-41e1-b015-a5130dea208c" name="Default Changelist" comment="" />
+      <created>1618173702717</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1618173702717</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="2309" y="206" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1618173772799">
+      <screen x="1920" y="0" width="1920" height="1040" />
+    </state>
+    <state x="2309" y="206" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.40.1920.1040/1920.0.1920.1040@1920.0.1920.1040" timestamp="1618173772799" />
+    <state x="2635" y="306" key="FileChooserDialogImpl" timestamp="1618173794294">
+      <screen x="1920" y="0" width="1920" height="1040" />
+    </state>
+    <state x="2635" y="306" key="FileChooserDialogImpl/0.40.1920.1040/1920.0.1920.1040@1920.0.1920.1040" timestamp="1618173794294" />
+  </component>
+</project>

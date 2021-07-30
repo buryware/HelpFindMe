@@ -15,6 +15,9 @@
  */
 package com.firebase.geofire;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.annotation.NonNull;
 
 import com.firebase.geofire.core.GeoHash;
@@ -122,6 +125,7 @@ public class GeoFire {
             // We're not on Android, use the ThreadEventRaiser
             eventRaiser = new ThreadEventRaiser();
         }
+
         this.eventRaiser = eventRaiser;
     }
 

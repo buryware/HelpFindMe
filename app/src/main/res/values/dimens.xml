@@ -1,3 +1,15 @@
 <resources>
     <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="local_preview_width">54dp</dimen>
+    <dimen name="local_preview_height">78dp</dimen>
+    <dimen name="local_back_icon_size">50dp</dimen>
+    <dimen name="remote_back_icon_size">100dp</dimen>
+    <dimen name="remote_back_icon_margin_bottom">90dp</dimen>
+
+    <dimen name="control_top_margin">5dp</dimen>
+    <dimen name="control_bottom_margin">5dp</dimen>
+    <dimen name="control_bottom_horizontal_margin">10dp</dimen>
+
+    <dimen name="innercontrol_top_margin">5dp</dimen>
+    <dimen name="innercontrol_right_margin">30dp</dimen>
 </resources>

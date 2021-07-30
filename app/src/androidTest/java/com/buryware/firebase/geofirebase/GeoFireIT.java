@@ -15,10 +15,14 @@
  */
 package com.buryware.firebase.geofirebase;
 
-import android.support.annotation.NonNull;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
+//import android.support.annotation.NonNull;
 
+import android.support.test.rule.ActivityTestRule;
+
+import androidx.test.runner.AndroidJUnit4;
+
+import com.buryware.firebase.geofirebase.testing.TestCallback;
+import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.buryware.MainActivity;
 import com.firebase.geofire.testing.GeoFireTestingRule;
 import com.firebase.geofire.testing.SimpleFuture;
@@ -43,7 +47,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @RunWith(AndroidJUnit4.class)
-public class GeoFireIT {
+public class
+
+
+GeoFireIT {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule =

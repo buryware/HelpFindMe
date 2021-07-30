@@ -6,4 +6,7 @@
 
     <color name="colorProgressBar">#CEF81302</color>
     <color name="colorGeoFence">#60C3EFEF</color>
+
+    <color name="localBackground">#827b92</color>
+    <color name="remoteBackground">#484258</color>
 </resources>
